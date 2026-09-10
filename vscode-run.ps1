@@ -27,18 +27,58 @@ trap {
 # 配置
 $configDir  = "$env:USERPROFILE\.vscode-launcher"
 $configFile = "$configDir\last.json"
-function Find-VSCodePath {
-    $candidates = @(
-        "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe",
-        "C:\Program Files\Microsoft VS Code\Code.exe",
-        "C:\Program Files (x86)\Microsoft VS Code\Code.exe"
-    )
-    foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
-    return $null
-}$codePath   = Find-VSCodePath
-$codeCmd    = if ($codePath) { Join-Path (Split-Path $codePath) "bin\code.cmd" } else { $null }
+function Save-VSCodePath($path) {
+    $configDir = "$env:USERPROFILE\.vscode-launcher"
+    $configFile = "$configDir\config.json"
+    if (-not (Test-Path $configDir)) { New-Item -ItemType Directory -Path $configDir -Force | Out-Null }
+    $cfg = [PSCustomObject]@{}
+    if (Test-Path $configFile) { try { $cfg = Get-Content $configFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { } }
+    $cfg | Add-Member -NotePropertyName "VSCodePath" -NotePropertyValue $path -Force
+    $cfg | ConvertTo-Json -Depth 3 | Set-Content $configFile -Encoding UTF8
+}
+function Get-VSCodePath {
+    $configDir = "$env:USERPROFILE\.vscode-launcher"
+    $configFile = "$configDir\config.json"
+    $savedPath = $null
+    if (Test-Path $configFile) {
+        try {
+            $cfg = Get-Content $configFile -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($cfg.VSCodePath -and (Test-Path $cfg.VSCodePath)) { $savedPath = $cfg.VSCodePath }
+        } catch { }
+    }
+    if ($savedPath) {
+        Write-Host ""
+        Write-Host "  记录的 VSCode: $savedPath" -ForegroundColor Yellow
+        while ($true) {
+            $yn = Read-Host "  使用记录的路径? (y/n)"
+            if ($yn -match '^[Yy]$') { return $savedPath }
+            if ($yn -match '^[Nn]$') { break }
+            Write-Host "  输入无效，请输入 y 或 n" -ForegroundColor Red
+        }
+    }
+    while ($true) {
+        Write-Host ""
+        Write-Host "  1. 自动扫描常见位置"
+        Write-Host "  2. 手动输入 Code.exe 路径"
+        $choice = Read-Host "  选择"
+        if ($choice -eq "1") {
+            $candidates = @(
+                "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe",
+                "C:\Program Files\Microsoft VS Code\Code.exe",
+                "C:\Program Files (x86)\Microsoft VS Code\Code.exe"
+            )
+            foreach ($p in $candidates) { if (Test-Path $p) { Save-VSCodePath $p; Write-Host "  找到: $p" -ForegroundColor Green; return $p } }
+            Write-Host "  常见位置未找到，请手动输入" -ForegroundColor Yellow
+        } elseif ($choice -eq "2") {
+            $p = Read-Host "  输入 Code.exe 完整路径"
+            if ($p -and (Test-Path $p)) { Save-VSCodePath $p; return $p }
+            Write-Host "  路径无效" -ForegroundColor Red
+        } else { Write-Host "  输入无效，请输入 1 或 2" -ForegroundColor Red }
+    }
+}
+$codePath   = Get-VSCodePath
+$codeCmd    = Join-Path (Split-Path $codePath) "bin\code.cmd"
 $extRoot    = "$env:USERPROFILE\.vscode\extensions"
-if (-not $codePath) { Write-Host "  未找到 VSCode，请确认已安装" -ForegroundColor Red; exit 1 }
 
 # 扩展中文说明
 $descMap = @{
