@@ -128,8 +128,8 @@ function Save-ConfigFields($fields) {
     if (-not (Test-Path $configDir)) { New-Item -ItemType Directory -Path $configDir -Force | Out-Null }
     $data = [PSCustomObject]@{}
     if (Test-Path $configFile) { try { $data = Get-Content $configFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { } }
-    foreach ($prop in $fields.PSObject.Properties) { if ($data.PSObject.Properties[$prop.Name]) { $data.PSObject.Properties.Remove($prop.Name) } }
-    if ($data.PSObject.Properties["Time"]) { $data.PSObject.Properties.Remove("Time") }
+    foreach ($prop in $fields.PSObject.Properties) { while ($data.PSObject.Properties[$prop.Name]) { $data.PSObject.Properties.Remove($prop.Name) } }
+    while ($data.PSObject.Properties["Time"]) { $data.PSObject.Properties.Remove("Time") }
     foreach ($prop in $fields.PSObject.Properties) { $data | Add-Member -NotePropertyName $prop.Name -NotePropertyValue $prop.Value }
     $data | Add-Member -NotePropertyName "Time" -NotePropertyValue (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
     $data | ConvertTo-Json -Depth 3 | Set-Content $configFile -Encoding UTF8
