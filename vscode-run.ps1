@@ -190,8 +190,8 @@ if ($lastEnv -and $lastEnv.PythonPath) {
     if (Test-Path $wsSettings) {
         try {
             $ws = Get-Content $wsSettings -Raw -Encoding UTF8 | ConvertFrom-Json
-            if (.'python.defaultInterpreterPath' -ne $lastEnv.PythonPath) {
-                $errors += "工作区 Python 解释器不匹配: 写入=$($ws.python.defaultInterpreterPath), 期望=$($lastEnv.PythonPath)"
+            if ($ws.'python.defaultInterpreterPath' -ne $lastEnv.PythonPath) {
+                $errors += "工作区 Python 解释器不匹配: 写入=$($ws.'python.defaultInterpreterPath'), 期望=$($lastEnv.PythonPath)"
             }
         } catch { $errors += "工作区 settings.json 解析失败" }
     } else { $errors += "工作区 settings.json 未创建" }
