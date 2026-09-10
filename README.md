@@ -60,6 +60,19 @@
 - `文档\VSCode启动器\last-run.log`：最近一次启动验证结果（覆盖式）
 - `文档\VSCode启动器\error.log`：最近一次运行异常（覆盖式）
 
+### 字段覆盖规则
+
+`last.json` 由三个选择脚本共同维护，每个脚本只覆盖自己管理的顶层字段，其他脚本的字段原样保留：
+
+| 脚本 | 管理的字段 |
+|------|-----------|
+| `vscode-select-ext.ps1` | `Name`、`Ext` |
+| `vscode-select-env.ps1` | `PMName`、`PMType`、`PMPath`、`PythonPath`、`PythonName` |
+| `vscode-select-workspace.ps1` | `WorkspacePath` |
+| `vscode-run.ps1` | 只读，不写入 |
+
+保存时采用重建对象方式：读取整个文件 → 只保留非自己字段 → 写入自己的新字段 → 写回。只处理第一层级，不递归嵌套对象，从根上杜绝同级重复 key。`Time` 字段每次自动更新。
+
 ## VSCode 路径管理
 
 首次运行时如无记录，会提示：
