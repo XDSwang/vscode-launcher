@@ -39,11 +39,23 @@ function Save-ConfigFields($fields) {
     if (-not (Test-Path $configDir)) { New-Item -ItemType Directory -Path $configDir -Force | Out-Null }
     $data = [PSCustomObject]@{}
     if (Test-Path $configFile) { try { $data = Get-Content $configFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { } }
-    foreach ($prop in $fields.PSObject.Properties) { while ($data.PSObject.Properties[$prop.Name]) { $data.PSObject.Properties.Remove($prop.Name) } }
-    while ($data.PSObject.Properties["Time"]) { $data.PSObject.Properties.Remove("Time") }
-    foreach ($prop in $fields.PSObject.Properties) { $data | Add-Member -NotePropertyName $prop.Name -NotePropertyValue $prop.Value }
-    $data | Add-Member -NotePropertyName "Time" -NotePropertyValue (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-    $data | ConvertTo-Json -Depth 3 | Set-Content $configFile -Encoding UTF8
+    # 标记自己管理的字段名（含 Time）
+    $myNames = @{}
+    foreach ($prop in $fields.PSObject.Properties) { $myNames[$prop.Name] = $true }
+    $myNames["Time"] = $true
+    # 重建对象：只保留非自己字段，杜绝同级重复
+    $newData = [PSCustomObject]@{}
+    foreach ($prop in $data.PSObject.Properties) {
+        if (-not $myNames.ContainsKey($prop.Name)) {
+            $newData | Add-Member -NotePropertyName $prop.Name -NotePropertyValue $prop.Value
+        }
+    }
+    # 写入自己的新字段
+    foreach ($prop in $fields.PSObject.Properties) {
+        $newData | Add-Member -NotePropertyName $prop.Name -NotePropertyValue $prop.Value
+    }
+    $newData | Add-Member -NotePropertyName "Time" -NotePropertyValue (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+    $newData | ConvertTo-Json -Depth 3 | Set-Content $configFile -Encoding UTF8
 }
 
 Write-Host ""
