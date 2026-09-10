@@ -30,6 +30,45 @@ Write-Host "  VSCode 启动器" -ForegroundColor Cyan
 Write-Host "  脚本位置: C:\Users\dxx\Documents\VSCode启动器" -ForegroundColor DarkGray
 Write-Host "  （单独运行: vscode-select-ext.ps1 选扩展, vscode-select-env.ps1 选环境, vscode-select-workspace.ps1 选工作区, vscode-run.ps1 直接启动）" -ForegroundColor DarkGray
 
+# ===== 一键复用上次记录 =====
+$configDir  = "$env:USERPROFILE\.vscode-launcher"
+$configFile = "$configDir\last.json"
+$lastEnv = $null
+if (Test-Path $configFile) { try { $lastEnv = Get-Content $configFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { } }
+
+$hasExt = ($lastEnv -and $lastEnv.Ext -and $lastEnv.Ext.Count -gt 0)
+$hasEnv = ($lastEnv -and $lastEnv.PythonPath)
+$hasWs  = ($lastEnv -and $lastEnv.WorkspacePath -and (Test-Path $lastEnv.WorkspacePath))
+$allReady = ($hasExt -and $hasEnv -and $hasWs)
+
+if ($allReady) {
+    Write-Host ""
+    Write-Host "  检测到完整上次记录:" -ForegroundColor Green
+    if ($lastEnv.Name) { Write-Host "    扩展: $($lastEnv.Name)" }
+    if ($lastEnv.PythonName) { Write-Host "    环境: $($lastEnv.PythonName)" }
+    if ($lastEnv.WorkspacePath) { Write-Host "    工作区: $($lastEnv.WorkspacePath)" }
+    Write-Host ""
+    while ($true) {
+        $yn = Read-Host "  一键使用上次记录直接启动? (y/n)"
+        if ($yn -match '^[Yy]$') {
+            Write-Host ""
+            Write-Host "  第四步：启动 VSCode" -ForegroundColor Cyan
+            Write-Host "  ==============" -ForegroundColor DarkGray
+            & "$scriptDir\vscode-run.ps1" @FileArgs
+            exit 0
+        }
+        if ($yn -match '^[Nn]$') { break }
+        Write-Host "  输入无效，请输入 y 或 n" -ForegroundColor Red
+    }
+} else {
+    $missing = @()
+    if (-not $hasExt) { $missing += "扩展" }
+    if (-not $hasEnv) { $missing += "Python环境" }
+    if (-not $hasWs)  { $missing += "工作区" }
+    Write-Host ""
+    Write-Host "  记录缺失（$($missing -join '、')），不能一键启动，将逐步选择" -ForegroundColor Yellow
+}
+
 Write-Host ""
 Write-Host "  第一步：选择扩展" -ForegroundColor Cyan
 Write-Host "  ==============" -ForegroundColor DarkGray
