@@ -133,4 +133,80 @@ $argStr = ($argList | ForEach-Object { "`"$_`"" }) -join " "
 $fullCmd = 'start "" "' + $codePath + '" ' + $argStr
 & cmd /c $fullCmd
 
-Start-Sleep -Milliseconds 500
+# ===== 启动后验证 =====
+Start-Sleep -Seconds 3
+
+$errors = @()
+$warnings = @()
+
+# 1. 工作区路径
+if (-not (Test-Path $projectDir)) {
+    $errors += "工作区路径不存在: $projectDir"
+}
+
+# 2. Python 环境写入验证
+if ($lastEnv -and $lastEnv.PythonPath) {
+    $wsSettings = Join-Path $projectDir ".vscode\settings.json"
+    if (Test-Path $wsSettings) {
+        try {
+            $ws = Get-Content $wsSettings -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($ws.python.defaultInterpreterPath -ne $lastEnv.PythonPath) {
+                $errors += "工作区 Python 解释器不匹配: 写入=$($ws.python.defaultInterpreterPath), 期望=$($lastEnv.PythonPath)"
+            }
+        } catch { $errors += "工作区 settings.json 解析失败" }
+    } else { $errors += "工作区 settings.json 未创建" }
+    if (-not (Test-Path $lastEnv.PythonPath)) {
+        $errors += "Python 解释器文件不存在: $($lastEnv.PythonPath)"
+    }
+}
+
+# 3. 扩展启用验证
+if ($lastEnv -and $lastEnv.Ext) {
+    $recordedExt = Resolve-SelectedExt $lastEnv.Ext
+    if ($recordedExt.Count -ne $selectedExt.Count) {
+        $errors += "扩展数量不匹配: 记录=$($recordedExt.Count), 实际启用=$($selectedExt.Count)"
+    }
+    foreach ($e in $recordedExt) {
+        if ($selectedExt -notcontains $e) { $errors += "扩展未启用: $e" }
+    }
+}
+
+# 4. VSCode 进程存活
+$vscodeProc = Get-Process -Name "Code" -ErrorAction SilentlyContinue
+if (-not $vscodeProc) {
+    $errors += "VSCode 进程未启动（可能启动失败）"
+}
+
+# 5. 终端环境提醒（无法自动验证，人工确认）
+if ($lastEnv -and $lastEnv.PythonName) {
+    $warnings += "请确认 VSCode 终端提示符显示环境名（如 (envname)），如未显示请检查 conda 初始化"
+}
+$warnings += "请确认左下角 Python 版本和右下角扩展状态与选择一致"
+
+# 输出结果
+Write-Host ""
+if ($errors.Count -gt 0) {
+    Write-Host "  ===== 启动异常 ($($errors.Count) 项) =====" -ForegroundColor Red
+    for ($i = 0; $i -lt $errors.Count; $i++) {
+        Write-Host ("  {0}. {1}" -f ($i + 1), $errors[$i]) -ForegroundColor Red
+    }
+    Write-Host "  ================================" -ForegroundColor Red
+} else {
+    Write-Host "  [OK] 工作区、Python环境、扩展配置、进程启动 全部正常" -ForegroundColor Green
+}
+
+if ($warnings.Count -gt 0) {
+    Write-Host ""
+    Write-Host "  人工确认项:" -ForegroundColor Yellow
+    for ($i = 0; $i -lt $warnings.Count; $i++) {
+        Write-Host ("  - {0}" -f $warnings[$i]) -ForegroundColor Yellow
+    }
+}
+
+# 有异常则不自动关闭
+if ($errors.Count -gt 0) {
+    Write-Host ""
+    Read-Host "  存在异常，按回车关闭窗口（VSCode 仍在运行）"
+} else {
+    Start-Sleep -Milliseconds 1500
+}
