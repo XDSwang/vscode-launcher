@@ -203,10 +203,34 @@ if ($warnings.Count -gt 0) {
     }
 }
 
-# 有异常则不自动关闭
-if ($errors.Count -gt 0) {
-    Write-Host ""
-    Read-Host "  存在异常，按回车关闭窗口（VSCode 仍在运行）"
-} else {
-    Start-Sleep -Milliseconds 1500
+# 覆盖式写入运行日志（只保留最近一次）
+$runLog = Join-Path $PSScriptRoot "last-run.log"
+$logLines = @()
+$logLines += "=== VSCode启动器 运行记录 ==="
+$logLines += "时间: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+$logLines += "工作区: $projectDir"
+if ($lastEnv -and $lastEnv.PythonName) { $logLines += "Python: $($lastEnv.PythonName)" }
+if ($lastEnv -and $lastEnv.PythonPath) { $logLines += "Python路径: $($lastEnv.PythonPath)" }
+$logLines += "启用扩展: $($selectedExt.Count) 个"
+if ($selectedExt.Count -gt 0) {
+    $selNames = ($extensions | Where-Object { $selectedExt -contains $_.Id } | ForEach-Object { $_.Name }) -join ", "
+    $logLines += "扩展列表: $selNames"
 }
+$logLines += "---"
+if ($errors.Count -gt 0) {
+    $logLines += "异常 ($($errors.Count) 项):"
+    for ($i = 0; $i -lt $errors.Count; $i++) { $logLines += "  $($i+1). $($errors[$i])" }
+} else {
+    $logLines += "检测结果: 全部正常"
+}
+if ($warnings.Count -gt 0) {
+    $logLines += "人工确认项:"
+    foreach ($w in $warnings) { $logLines += "  - $w" }
+}
+$logLines += "=============================="
+try { Set-Content -Path $runLog -Value $logLines -Encoding UTF8 } catch { }
+
+# 无论正常异常都停窗，按回车关闭
+Write-Host ""
+Write-Host "  运行日志: $runLog" -ForegroundColor DarkGray
+Read-Host "  按回车关闭窗口（VSCode 仍在运行）"
