@@ -8,9 +8,11 @@
 - **Python 环境管理**：自动扫描 conda 环境，支持创建/删除环境，显示完整版本号和下载进度
 - **工作区选择**：扫描常用项目目录，选择后自动打开
 - **记忆上次选择**：扩展、环境、工作区都记录，下次可一键继续
+- **VSCode 路径记录**：首次自动扫描或手动输入 Code.exe 路径，保存后下次直接使用，无需重复扫描
+- **启动后自动验证**：启动后检查工作区、Python解释器写入、扩展启用、进程存活，异常红色列出
+- **运行日志**：每次启动结果覆盖写入 `last-run.log`（只保留最近一次），运行异常写入 `error.log`
 - **输入安全**：所有选择都有确认步骤，无效输入提示重新输入，不会误操作
-- **错误日志**：运行异常自动记录到脚本目录的 `error.log`
-- **自动关闭**：启动 VSCode 后脚本窗口自动关闭，进程完全分离
+- **进程分离**：启动 VSCode 后脚本窗口停窗显示验证结果，按回车关闭，VSCode 独立运行不受影响
 
 ## 快速安装
 
@@ -32,7 +34,7 @@
 1. **选择扩展**：有记录问是否继续 → 循环添加未选扩展 → 每次添加确认
 2. **选择 Python 环境**：选包管理器 → 选环境（可创建/删除）→ 确认
 3. **选择工作区**：选项目目录 → 确认
-4. **启动**：自动写入工作区设置，启动 VSCode，窗口自动关闭
+4. **启动**：自动写入工作区设置 → 启动 VSCode → 等待3秒自动验证 → 显示结果（正常/异常）→ 按回车关闭窗口
 
 ## 单独运行
 
@@ -44,13 +46,23 @@
 | `vscode-select-ext.ps1` | 只选扩展，不启动 |
 | `vscode-select-env.ps1` | 只选环境，不启动 |
 | `vscode-select-workspace.ps1` | 只选工作区，不启动 |
-| `vscode-run.ps1` | 只读记录直接启动 |
+| `vscode-run.ps1` | 只读记录直接启动（含启动验证） |
 
 ## 配置文件
 
-- `%USERPROFILE%\.vscode-launcher\last.json`：上次选择记录
+- `%USERPROFILE%\.vscode-launcher\last.json`：上次选择记录（扩展/环境/工作区）
+- `%USERPROFILE%\.vscode-launcher\config.json`：全局配置（VSCode 路径）
 - `%USERPROFILE%\.vscode-launcher\package-managers.json`：包管理器配置
-- `文档\VSCode启动器\error.log`：运行错误日志
+- `文档\VSCode启动器\last-run.log`：最近一次启动验证结果（覆盖式）
+- `文档\VSCode启动器\error.log`：运行异常日志（追加式）
+
+## VSCode 路径管理
+
+首次运行时如无记录，会提示：
+1. **自动扫描常见位置**：检查 LOCALAPPDATA 和 Program Files
+2. **手动输入路径**：直接输入 Code.exe 完整路径
+
+选择后自动保存到 `config.json`，下次运行直接使用记录的路径，也可选择重新扫描或输入新路径。
 
 ## 添加新包管理器
 
