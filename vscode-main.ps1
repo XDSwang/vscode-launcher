@@ -30,6 +30,21 @@ Write-Host "  VSCode 启动器" -ForegroundColor Cyan
 Write-Host "  脚本位置: C:\Users\dxx\Documents\VSCode启动器" -ForegroundColor DarkGray
 Write-Host "  （单独运行: vscode-select-ext.ps1 选扩展, vscode-select-env.ps1 选环境, vscode-select-workspace.ps1 选工作区, vscode-run.ps1 直接启动）" -ForegroundColor DarkGray
 
+# 扩展中文映射（用于一键复用显示）
+$extNameMap = @{
+    "ms-ceintl.vscode-language-pack-zh-hans" = "中文语言包"
+    "ms-python.python"                      = "Python 核心"
+    "ms-python.vscode-pylance"              = "Pylance"
+    "ms-python.debugpy"                     = "Debugpy"
+    "continue.continue"                     = "Continue AI"
+    "doubao.doubao-app-share-vscode-plugin" = "豆包插件"
+    "ritwickdey.liveserver"                 = "Live Server"
+}
+function Get-ExtDisplayName($id) {
+    if ($extNameMap.ContainsKey($id)) { return $extNameMap[$id] }
+    return $id
+}
+
 # ===== 一键复用上次记录 =====
 $configDir  = "$env:USERPROFILE\.vscode-launcher"
 $configFile = "$configDir\last.json"
@@ -44,7 +59,10 @@ $allReady = ($hasExt -and $hasEnv -and $hasWs)
 if ($allReady) {
     Write-Host ""
     Write-Host "  检测到完整上次记录:" -ForegroundColor Green
-    if ($lastEnv.Name) { Write-Host "    扩展: $($lastEnv.Name)" }
+    if ($lastEnv.Ext -and $lastEnv.Ext.Count -gt 0) {
+        $extNames = ($lastEnv.Ext | ForEach-Object { Get-ExtDisplayName $_ }) -join "、"
+        Write-Host "    扩展: $extNames ($($lastEnv.Ext.Count)个)"
+    } elseif ($lastEnv.Name) { Write-Host "    扩展: $($lastEnv.Name)" }
     if ($lastEnv.PythonName) { Write-Host "    环境: $($lastEnv.PythonName)" }
     if ($lastEnv.WorkspacePath) { Write-Host "    工作区: $($lastEnv.WorkspacePath)" }
     Write-Host ""
