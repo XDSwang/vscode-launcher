@@ -75,11 +75,30 @@
 
 ## VSCode 路径管理
 
-首次运行时如无记录，会提示：
-1. **自动扫描常见位置**：检查 LOCALAPPDATA 和 Program Files
-2. **手动输入路径**：直接输入 Code.exe 完整路径
+首次运行时如无记录，会提示选择：
+1. **自动扫描常见位置**：检查以下路径
+   - `%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe`
+   - `C:\Program Files\Microsoft VS Code\Code.exe`
+   - `C:\Program Files (x86)\Microsoft VS Code\Code.exe`
+2. **手动输入路径**：输入 `Code.exe` 的**完整路径（含文件名）**，例如 `E:\...\Code.exe`（盘符开头 + 文件名结尾，中间省略），不是目录。
 
 选择后自动保存到 `config.json`，下次运行直接使用记录的路径，也可选择重新扫描或输入新路径。
+
+### 找不到 VSCode 怎么办？
+
+**方法一：手动输入**（推荐）
+在桌面右键 VSCode 图标 → 属性 → 目标，复制完整路径（含 `Code.exe`），粘贴到脚本提示里。
+
+**方法二：添加扫描目录**
+如果 VSCode 装在非标准位置，可以在脚本里加扫描路径。扫描代码在以下两个文件的 `Get-VSCodePath` 函数中：
+- `vscode-select-ext.ps1`：搜索 `$candidates = @(`，在数组里加一行你的路径
+- `vscode-run.ps1`：同上，加同样的路径
+
+例如 VSCode 装在 `D:\VSCode\Code.exe`，就在 `$candidates` 数组里加：
+```powershell
+"D:\VSCode\Code.exe",
+```
+两个脚本都要加，加完保存即可。下次选"自动扫描"就能找到。
 
 ## 添加新包管理器
 
