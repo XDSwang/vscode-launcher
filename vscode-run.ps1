@@ -15,7 +15,7 @@ trap {
     $errPos  = $_.InvocationInfo.PositionMessage
     $errStack = $_.ScriptStackTrace
     $logEntry = "[$errTime] 脚本: $errName`n错误: $errMsg`n位置: $errPos`n堆栈: $errStack`n---"
-    try { Add-Content -Path $script:ErrorLogFile -Value $logEntry -Encoding UTF8 } catch { }
+    try { Set-Content -Path $script:ErrorLogFile -Value $logEntry -Encoding UTF8 } catch { }
     Write-Host ""
     Write-Host "  [运行异常] 错误已记录到: $script:ErrorLogFile" -ForegroundColor Red
     Write-Host "  错误: $errMsg" -ForegroundColor Red
@@ -272,5 +272,5 @@ try { Set-Content -Path $runLog -Value $logLines -Encoding UTF8 } catch { }
 
 # 无论正常异常都停窗，按回车关闭
 Write-Host ""
-Write-Host "  运行日志: $runLog" -ForegroundColor DarkGray
+Write-Host "  运行日志: $script:ErrorLogFile" -ForegroundColor DarkGray
 Read-Host "  按回车关闭窗口（VSCode 仍在运行）"

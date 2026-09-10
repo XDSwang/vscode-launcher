@@ -58,7 +58,7 @@
 - `%USERPROFILE%\.vscode-launcher\config.json`：全局配置（VSCode 路径）
 - `%USERPROFILE%\.vscode-launcher\package-managers.json`：包管理器配置
 - `文档\VSCode启动器\last-run.log`：最近一次启动验证结果（覆盖式）
-- `文档\VSCode启动器\error.log`：运行异常日志（追加式）
+- `文档\VSCode启动器\error.log`：最近一次运行异常（覆盖式）
 
 ## VSCode 路径管理
 

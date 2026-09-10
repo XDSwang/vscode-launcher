@@ -10,7 +10,7 @@ trap {
     $errPos  = $_.InvocationInfo.PositionMessage
     $errStack = $_.ScriptStackTrace
     $logEntry = "[$errTime] 脚本: $errName`n错误: $errMsg`n位置: $errPos`n堆栈: $errStack`n---"
-    try { Add-Content -Path $script:ErrorLogFile -Value $logEntry -Encoding UTF8 } catch { }
+    try { Set-Content -Path $script:ErrorLogFile -Value $logEntry -Encoding UTF8 } catch { }
     Write-Host ""
     Write-Host "  [运行异常] 错误已记录到: $script:ErrorLogFile" -ForegroundColor Red
     Write-Host "  错误: $errMsg" -ForegroundColor Red
