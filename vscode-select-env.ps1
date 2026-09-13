@@ -1,4 +1,4 @@
-﻿# VSCode Python 环境选择器（单独运行，只改环境配置，不启动 VSCode）
+﻿# VSCode 运行环境选择器（单独运行，只改环境配置，不启动 VSCode）
 
 $ErrorActionPreference = "Stop"
 # ===== 运行异常记录 =====
@@ -143,6 +143,7 @@ function New-CondaEnvironment($pm) {
     while ($true) {
         Write-Host ""
         Write-Host "  正在获取可用 Python 版本（conda search 较慢，请稍候）..." -ForegroundColor DarkGray
+        & $exe tos accept 2>$null | Out-Null
         $allVersions = & $exe search python --override-channels -c defaults 2>$null | ForEach-Object { if ($_ -match 'python\s+(\d+\.\d+\.\d+)') { $matches[1] } } | Sort-Object -Descending -Unique
         # 每个小版本只保留最新3个补丁版
         $grouped = @{}
@@ -252,7 +253,7 @@ function Remove-CondaEnvironment($pm) {
 
 # ===== 主流程 =====
 Write-Host ""
-Write-Host "  VSCode Python 环境选择器" -ForegroundColor Cyan
+Write-Host "  VSCode 运行环境选择器" -ForegroundColor Cyan
 Write-Host "  ========================" -ForegroundColor DarkGray
 
 $managers = Get-PackageManagers
@@ -297,7 +298,7 @@ while (-not $selectedPM) {
     $addIdx = $managers.Count + 1; $delIdx = $managers.Count + 2; $skipIdx = $managers.Count + 3
     Write-Host ("  {0,2}. 添加新包管理器" -f $addIdx) -ForegroundColor Green
     Write-Host ("  {0,2}. 删除包管理器" -f $delIdx) -ForegroundColor Red
-    Write-Host ("  {0,2}. 跳过（不设置Python环境）" -f $skipIdx) -ForegroundColor Yellow
+    Write-Host ("  {0,2}. 跳过（不设置运行环境）" -f $skipIdx) -ForegroundColor Yellow
     Write-Host ""
     $pmInput = Read-Host "  选择编号"
     $idx = -1
@@ -317,21 +318,21 @@ if ($selectedPM) {
         Write-Host ("  路径: {0}" -f $lastEnv.PythonPath) -ForegroundColor DarkGray
         Write-Host ""
         while ($true) {
-            $yn = Read-Host "  是否继续上次 Python 环境? (y/n)"
+            $yn = Read-Host "  是否继续上次 运行环境? (y/n)"
             if ($yn -match '^[Yy]$') { $selectedPython = [PSCustomObject]@{ Name = $lastEnv.PythonName; Path = $lastEnv.PythonPath; Type = $selectedPM.Type }; break }
             if ($yn -match '^[Nn]$') { break }
             Write-Host "  输入无效，请输入 y 或 n" -ForegroundColor Red
         }
     }
     while (-not $selectedPython) {
-        $pythonEnvs = Get-PythonEnvs $selectedPM
-        if ($pythonEnvs.Count -eq 0) { Write-Host "  未检测到任何 Python 环境" -ForegroundColor Yellow; break }
-        Write-Host ""; Write-Host ("  可用 Python 环境 ({0}):" -f $pythonEnvs.Count) -ForegroundColor Cyan; Write-Host ""
+        $pythonEnvs = @(Get-PythonEnvs $selectedPM)
+        if ($pythonEnvs.Count -eq 0) { Write-Host "  未检测到任何 运行环境" -ForegroundColor Yellow; break }
+        Write-Host ""; Write-Host ("  可运行环境 ({0}):" -f $pythonEnvs.Count) -ForegroundColor Cyan; Write-Host ""
         for ($i = 0; $i -lt $pythonEnvs.Count; $i++) { $e = $pythonEnvs[$i]; Write-Host ("  {0,2}. {1,-24} {2}" -f ($i + 1), $e.Name, $e.Path) }
         $createIdx = $pythonEnvs.Count + 1; $deleteIdx = $pythonEnvs.Count + 2; $skipIdx = $pythonEnvs.Count + 3
         Write-Host ("  {0,2}. 创建新环境" -f $createIdx) -ForegroundColor Green
         Write-Host ("  {0,2}. 删除环境" -f $deleteIdx) -ForegroundColor Red
-        Write-Host ("  {0,2}. 跳过（不设置Python环境）" -f $skipIdx) -ForegroundColor Yellow
+        Write-Host ("  {0,2}. 跳过（不设置运行环境）" -f $skipIdx) -ForegroundColor Yellow
         Write-Host ""
         $pyInput = Read-Host "  选择编号"
         $idx = -1
@@ -377,5 +378,5 @@ if ($selectedPython) {
     Write-Host "  环境选择已保存" -ForegroundColor Green
     Write-Host ("  包管理器: {0}" -f $selectedPM.Name)
     Write-Host ("  Python: {0}" -f $selectedPython.Name)
-} else { Write-Host "  未设置 Python 环境" -ForegroundColor Yellow }
+} else { Write-Host "  未设置 运行环境" -ForegroundColor Yellow }
 Write-Host ""

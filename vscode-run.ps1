@@ -47,34 +47,14 @@ function Get-VSCodePath {
         } catch { }
     }
     if ($savedPath) {
-        Write-Host ""
-        Write-Host "  记录的 VSCode: $savedPath" -ForegroundColor Yellow
-        while ($true) {
-            $yn = Read-Host "  使用记录的路径? (y/n)"
-            if ($yn -match '^[Yy]$') { return $savedPath }
-            if ($yn -match '^[Nn]$') { break }
-            Write-Host "  输入无效，请输入 y 或 n" -ForegroundColor Red
-        }
+        Write-Host "  使用 VSCode: $savedPath" -ForegroundColor DarkGray
+        return $savedPath
     }
-    while ($true) {
-        Write-Host ""
-        Write-Host "  1. 自动扫描常见位置"
-        Write-Host "  2. 手动输入 Code.exe 路径"
-        $choice = Read-Host "  选择"
-        if ($choice -eq "1") {
-            $candidates = @(
-                "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe",
-                "C:\Program Files\Microsoft VS Code\Code.exe",
-                "C:\Program Files (x86)\Microsoft VS Code\Code.exe"
-            )
-            foreach ($p in $candidates) { if (Test-Path $p) { Save-VSCodePath $p; Write-Host "  找到: $p" -ForegroundColor Green; return $p } }
-            Write-Host "  常见位置未找到，请手动输入" -ForegroundColor Yellow
-        } elseif ($choice -eq "2") {
-            $p = Read-Host "  输入 Code.exe 完整路径"
-            if ($p -and (Test-Path $p)) { Save-VSCodePath $p; return $p }
-            Write-Host "  路径无效" -ForegroundColor Red
-        } else { Write-Host "  输入无效，请输入 1 或 2" -ForegroundColor Red }
-    }
+    Write-Host ""
+    Write-Host "  [提示] 未配置 VSCode 路径" -ForegroundColor Yellow
+    Write-Host "  请先运行 install.ps1 一键安装进行配置" -ForegroundColor Yellow
+    Read-Host "  按回车退出"
+    exit 1
 }
 $codePath   = Get-VSCodePath
 $codeCmd    = Join-Path (Split-Path $codePath) "bin\code.cmd"
@@ -184,7 +164,7 @@ if (-not (Test-Path $projectDir)) {
     $errors += "工作区路径不存在: $projectDir"
 }
 
-# 2. Python 环境写入验证
+# 2. 运行环境写入验证
 if ($lastEnv -and $lastEnv.PythonPath) {
     $wsSettings = Join-Path $projectDir ".vscode\settings.json"
     if (Test-Path $wsSettings) {
@@ -232,7 +212,7 @@ if ($errors.Count -gt 0) {
     }
     Write-Host "  ================================" -ForegroundColor Red
 } else {
-    Write-Host "  [OK] 工作区、Python环境、扩展配置、进程启动 全部正常" -ForegroundColor Green
+    Write-Host "  [OK] 工作区、运行环境、扩展配置、进程启动 全部正常" -ForegroundColor Green
 }
 
 if ($warnings.Count -gt 0) {

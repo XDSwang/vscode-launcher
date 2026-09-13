@@ -80,8 +80,14 @@ foreach ($s in $scripts) {
 
 # 4. 创建配置目录
 if (-not (Test-Path $configDir)) { New-Item -ItemType Directory -Path $configDir -Force | Out-Null }
-
-# 5. 创建桌面快捷方式
+# 5. 保存 VSCode 路径到配置
+$configFile = "$configDir\config.json"
+$cfg = [PSCustomObject]@{}
+if (Test-Path $configFile) { try { $cfg = Get-Content $configFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { } }
+$cfg | Add-Member -NotePropertyName "VSCodePath" -NotePropertyValue $codePath -Force
+$cfg | ConvertTo-Json -Depth 3 | Set-Content $configFile -Encoding UTF8
+Write-Host "  [OK] VSCode 路径已保存" -ForegroundColor Green
+# 6. 创建桌面快捷方式
 $desktop = [Environment]::GetFolderPath("Desktop")
 $shortcutPath = Join-Path $desktop "Visual Studio Code.lnk"
 $ws = New-Object -ComObject WScript.Shell
@@ -94,7 +100,7 @@ $shortcut.Description = "VSCode 启动器（选扩展/环境/工作区）"
 $shortcut.Save()
 Write-Host "  [OK] 桌面快捷方式已创建" -ForegroundColor Green
 
-# 6. 配置 VSCode 全局设置（PyCharm 风格）
+# 7. 配置 VSCode 全局设置（PyCharm 风格）
 $settingsDir = "$env:APPDATA\Code\User"
 if (-not (Test-Path $settingsDir)) { New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null }
 $settingsFile = "$settingsDir\settings.json"
@@ -116,7 +122,7 @@ Write-Host "  ================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  使用方法："
 Write-Host "    1. 双击桌面 'Visual Studio Code' 快捷方式"
-Write-Host "    2. 依次选择扩展、Python环境、工作区"
+Write-Host "    2. 依次选择扩展、运行环境、工作区"
 Write-Host "    3. 自动启动 VSCode，脚本窗口自动关闭"
 Write-Host ""
 Write-Host "  脚本位置: $installDir"

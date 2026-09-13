@@ -84,7 +84,7 @@ if ($allReady) {
 } else {
     $missing = @()
     if (-not $hasExt) { $missing += "扩展" }
-    if (-not $hasEnv) { $missing += "Python环境" }
+    if (-not $hasEnv) { $missing += "运行环境" }
     if (-not $hasWs)  { $missing += "工作区" }
     Write-Host ""
     Write-Host "  记录缺失（$($missing -join '、')），不能一键启动，将逐步选择" -ForegroundColor Yellow
@@ -96,7 +96,7 @@ Write-Host "  ==============" -ForegroundColor DarkGray
 & "$scriptDir\vscode-select-ext.ps1"
 
 Write-Host ""
-Write-Host "  第二步：选择 Python 环境" -ForegroundColor Cyan
+Write-Host "  第二步：选择 运行环境" -ForegroundColor Cyan
 Write-Host "  =====================" -ForegroundColor DarkGray
 & "$scriptDir\vscode-select-env.ps1"
 

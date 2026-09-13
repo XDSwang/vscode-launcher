@@ -1,67 +1,90 @@
 ﻿# VSCode 启动器
 
-让 VSCode 像 PyCharm 一样：默认纯净启动、按需选择扩展、自动管理 conda/Python 环境、选择工作区、记忆上次选择。
+让 VSCode 像 PyCharm 一样：默认纯净启动、按需选择扩展、自动管理运行环境、选择工作区、记忆上次选择。
 
 ## 功能
 
-- **扩展按需加载**：自动扫描已安装扩展，带中文说明，循环选择，每次启动只加载选中的扩展
-- **Python 环境管理**：自动扫描 conda 环境，支持创建/删除环境，显示完整版本号和下载进度
+- **扩展按需加载**：列出已安装扩展（带中文说明），循环选择，每次启动只加载选中的扩展
+- **运行环境管理**：支持 conda 包管理器，扫描/创建/删除环境，显示完整版本号
 - **工作区选择**：扫描常用项目目录，选择后自动打开
 - **记忆上次选择**：扩展、环境、工作区都记录，下次可一键继续
-- **一键启动**：主脚本开头检测完整记录，显示扩展/环境/工作区摘要，确认后直接启动，跳过三步选择
-- **VSCode 路径记录**：首次自动扫描或手动输入 Code.exe 路径，保存后下次直接使用，无需重复扫描
-- **启动后自动验证**：启动后检查工作区、Python解释器写入、扩展启用、进程存活，异常红色列出
-- **运行日志**：每次启动结果覆盖写入 `last-run.log`（只保留最近一次），运行异常写入 `error.log`
-- **输入安全**：所有选择都有确认步骤，无效输入提示重新输入，不会误操作
-- **进程分离**：启动 VSCode 后脚本窗口停窗显示验证结果，按回车关闭，VSCode 独立运行不受影响
+- **一键启动**：主脚本开头检测完整记录，显示摘要，确认后直接启动，跳过三步选择
+- **启动后自动验证**：检查工作区、解释器写入、扩展启用、进程存活，异常红色列出，正常自动关闭
+- **终端环境名修复**：检测 PowerShell profile 是否加载 conda 初始化（兼容 Documents 重定向到其他盘），一键修复
+- **运行日志**：`last-run.log` 记录最近一次启动验证结果（覆盖式），`error.log` 记录运行异常
+- **输入安全**：所有选择都有确认步骤（编号+名称+路径），无效输入重新提示，不会误操作
 
-## 快速安装
-1. 下载本仓库所有文件
-2. 右键 `install.ps1` → 使用 PowerShell 运行
-3. 安装完成后双击桌面 `Visual Studio Code` 快捷方式
+## 文件说明
 
-> **首次使用说明**：install.ps1 只负责安装（检测 VSCode/conda、复制脚本、创建快捷方式、配置 VSCode 设置）。
-> **还需要运行一次启动器**：双击桌面快捷方式，依次选择扩展、Python 环境、工作区，选择结果会保存。
-> 之后每次打开直接沿用上次选择（开头询问是否继续上次记录，输入 y 即可一键启动）。
+| 文件 | 作用 |
+|------|------|
+| `install.ps1` | **一键安装（首次先运行它）**：检测/手动输入 VSCode 路径并保存、复制脚本、创建桌面快捷方式、配置 VSCode 全局设置 |
+| `vscode-main.ps1` | 主入口：支持一键启动或完整流程（扩展 → 运行环境 → 工作区 → 启动） |
+| `vscode-select-ext.ps1` | 只选扩展（不启动） |
+| `vscode-select-env.ps1` | 只选运行环境：包管理器 + conda 环境（可创建/删除） |
+| `vscode-select-workspace.ps1` | 只选工作区（不启动） |
+| `vscode-run.ps1` | 只读记录直接启动（含启动后验证） |
+| `vscode-fix-terminal.ps1` | 终端环境名修复：检测终端不显示 conda 环境名的原因，选择修复 |
 
-安装脚本会自动：
-- 检测 VSCode 和 conda 路径
-- 复制脚本到 `D:\vscode-launcher\VSCode启动器\`（无 D 盘时在 `%USERPROFILE%\vscode-launcher\VSCode启动器\`）
-- 创建桌面快捷方式
-- 配置 VSCode 全局设置（PyCharm 风格布局、终端、conda）
-- 配置 PowerShell conda 初始化
+## 使用流程
 
-## 使用方法
+### 首次使用（先运行哪个）
+
+1. **先运行 `install.ps1`**（右键 → 使用 PowerShell 运行）
+   - 检测 VSCode：常见位置自动找，找不到会提示手动输入 `Code.exe` 完整路径（含文件名）
+   - 安装完成：脚本复制到安装目录、创建桌面快捷方式、配置 VSCode 全局设置
+2. **双击桌面 `Visual Studio Code` 快捷方式**（实际运行 `vscode-main.ps1`）
+3. 依次选择：**扩展** → **运行环境** → **工作区**，选择结果自动保存
+4. 自动启动 VSCode，脚本窗口显示验证结果后关闭
+
+### 日常使用
 
 双击桌面快捷方式：
+- **一键启动**：三项记录齐全时，显示上次记录摘要（含具体插件名、环境名、工作区路径），输入 `y` 直接启动
+- **逐步选择**：记录缺失时提示缺了什么，自动进入对应的选择步骤
 
-**一键启动（推荐）**：如果扩展、环境、工作区三项记录都齐全，开头会显示上次记录摘要（含具体插件名），输入 `y` 直接启动，跳过所有选择步骤。记录缺失时会提示缺了什么，自动进入逐步选择。
+### 单独运行（只改某一项配置）
 
-**逐步选择**：
-1. **选择扩展**：有记录问是否继续 → 循环添加未选扩展 → 每次添加确认
-2. **选择 Python 环境**：选包管理器 → 选环境（可创建/删除）→ 确认
-3. **选择工作区**：选项目目录 → 确认
-4. **启动**：自动写入工作区设置 → 启动 VSCode → 等待3秒自动验证 → 显示结果（正常/异常）→ 按回车关闭窗口
+脚本在安装目录（见下"脚本位置"），可单独运行：
 
-## 单独运行
+| 想做什么 | 运行 |
+|---------|------|
+| 改扩展 | `vscode-select-ext.ps1` |
+| 改运行环境 / 添加包管理器 | `vscode-select-env.ps1` |
+| 改工作区 | `vscode-select-workspace.ps1` |
+| 直接启动（用已有记录） | `vscode-run.ps1` |
+| 修终端环境名不显示 | `vscode-fix-terminal.ps1` |
+| 重新配置 VSCode 路径 | `install.ps1` |
 
-脚本都在 `D:\vscode-launcher\VSCode启动器\`（无 D 盘时在 `%USERPROFILE%\vscode-launcher\VSCode启动器\`），可单独运行：
+## 手动添加扫描路径
 
-| 脚本 | 功能 |
+脚本在找不到程序时会按"常见路径列表"扫描。如果你的程序装在特殊位置，可以手动在脚本里加一行路径。**只加完整文件路径（含 .exe 文件名），不是目录**，加在对应数组里，以逗号结尾：
+
+| 脚本 | 找什么 | 位置 | 示例（加进数组） |
+|------|--------|------|------------------|
+| `install.ps1` | VSCode | `Find-VSCodePath` 函数里 `$candidates` 数组 | `"D:\...\Code.exe",` |
+| `vscode-select-env.ps1` | conda | 第 72 行 `$guessPaths` 数组（添加包管理器时） | `"D:\...\conda.exe",` |
+| `vscode-select-env.ps1` | conda | 第 262 行数组（首次自动检测时） | `"D:\...\conda.exe",` |
+| `vscode-fix-terminal.ps1` | conda | `$condaCandidates` 数组 | `"D:\...\conda.exe",` |
+| `vscode-select-workspace.ps1` | 项目目录 | `$projectRoots` 数组（扫描其子文件夹） | `"D:\...\projects",` |
+
+> 说明：
+> - `vscode-select-ext.ps1`、`vscode-run.ps1` **不扫描路径**，只读取 `config.json` 里保存的 VSCode 路径；VSCode 路径在 `install.ps1` 里配置一次
+> - 行号可能随版本变化，以**函数名/变量名**为准（用记事本打开脚本搜索变量名即可定位）
+> - 路径示例中间省略，实际填写完整的 `盘符:\...\程序名.exe`
+
+## 脚本位置与配置文件
+
+- **脚本位置**：`D:\vscode-launcher\VSCode启动器\`（无 D 盘时在 `%USERPROFILE%\vscode-launcher\VSCode启动器\`）
+- **配置文件**：`D:\vscode-launcher\VSCodeLauncher\`（无 D 盘时在 `%USERPROFILE%\vscode-launcher\VSCodeLauncher\`）
+
+| 文件 | 内容 |
 |------|------|
-| `vscode-main.ps1` | 主入口，支持一键启动或四步全流程 |
-| `vscode-select-ext.ps1` | 只选扩展，不启动 |
-| `vscode-select-env.ps1` | 只选环境，不启动 |
-| `vscode-select-workspace.ps1` | 只选工作区，不启动 |
-| `vscode-run.ps1` | 只读记录直接启动（含启动验证） |
-
-## 配置文件
-
-- `D:\vscode-launcher\VSCodeLauncher\last.json`（无 D 盘：`%USERPROFILE%\vscode-launcher\VSCodeLauncher\last.json`）：上次选择记录（扩展/环境/工作区）
-- `D:\vscode-launcher\VSCodeLauncher\config.json`（无 D 盘：`%USERPROFILE%\vscode-launcher\VSCodeLauncher\config.json`）：全局配置（VSCode 路径）
-- `D:\vscode-launcher\VSCodeLauncher\package-managers.json`（无 D 盘：`%USERPROFILE%\vscode-launcher\VSCodeLauncher\package-managers.json`）：包管理器配置
-- `D:\vscode-launcher\VSCode启动器\last-run.log`：最近一次启动验证结果（覆盖式）
-- `D:\vscode-launcher\VSCode启动器\error.log`：最近一次运行异常（覆盖式）
+| `config.json` | 全局配置（VSCode 路径） |
+| `last.json` | 上次选择记录（扩展/环境/工作区） |
+| `package-managers.json` | 包管理器配置（名称、类型、路径） |
+| `last-run.log` | 最近一次启动验证结果（覆盖式） |
+| `error.log` | 最近一次运行异常（覆盖式） |
 
 ### 字段覆盖规则
 
@@ -76,40 +99,13 @@
 
 保存时采用重建对象方式：读取整个文件 → 只保留非自己字段 → 写入自己的新字段 → 写回。只处理第一层级，不递归嵌套对象，从根上杜绝同级重复 key。`Time` 字段每次自动更新。
 
-## VSCode 路径管理
-
-首次运行时如无记录，会提示选择：
-1. **自动扫描常见位置**：检查以下路径
-   - `%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe`
-   - `C:\Program Files\Microsoft VS Code\Code.exe`
-   - `C:\Program Files (x86)\Microsoft VS Code\Code.exe`
-2. **手动输入路径**：输入 `Code.exe` 的**完整路径（含文件名）**，例如 `E:\...\Code.exe`（盘符开头 + 文件名结尾，中间省略），不是目录。
-
-选择后自动保存到 `config.json`，下次运行直接使用记录的路径，也可选择重新扫描或输入新路径。
-
-### 找不到 VSCode 怎么办？
-
-**方法一：手动输入**（推荐）
-在桌面右键 VSCode 图标 → 属性 → 目标，复制完整路径（含 `Code.exe`），粘贴到脚本提示里。
-
-**方法二：添加扫描目录**
-如果 VSCode 装在非标准位置，可以在脚本里加扫描路径。扫描代码在以下两个文件的 `Get-VSCodePath` 函数中：
-- `vscode-select-ext.ps1`：搜索 `$candidates = @(`，在数组里加一行你的路径
-- `vscode-run.ps1`：同上，加同样的路径
-
-例如 VSCode 装在 `D:\VSCode\Code.exe`，就在 `$candidates` 数组里加：
-```powershell
-"D:\VSCode\Code.exe",
-```
-两个脚本都要加，加完保存即可。下次选"自动扫描"就能找到。
-
 ## 添加新包管理器
 
-运行 `vscode-select-env.ps1`，在包管理器列表选"添加新包管理器"，输入名称和 conda.exe 路径即可。目前支持 conda。
+运行 `vscode-select-env.ps1`，在包管理器列表选"添加新包管理器"，输入名称和 `conda.exe` 完整路径即可。目前支持 conda。
 
 ## 系统要求
 
 - Windows 10/11
 - PowerShell 5.1+
 - VSCode（必需）
-- Anaconda/Miniconda（可选，用于 Python 环境管理）
+- Anaconda/Miniconda（可选，用于运行环境管理）
