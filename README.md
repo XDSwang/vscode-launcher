@@ -16,7 +16,7 @@
 - **进程分离**：启动 VSCode 后脚本窗口停窗显示验证结果，按回车关闭，VSCode 独立运行不受影响
 
 ## 快速安装
-
+测试修改
 1. 下载本仓库所有文件
 2. 右键 `install.ps1` → 使用 PowerShell 运行
 3. 安装完成后双击桌面 `Visual Studio Code` 快捷方式
