@@ -25,8 +25,6 @@ $configFile = "$configDir\last.json"
 
 # 常用项目根目录（扫描其子文件夹作为候选）
 $projectRoots = @(
-    "E:\dxx\software\project",
-    "E:\dxx\software\project\python",
     "$env:USERPROFILE\Desktop"
 )
 

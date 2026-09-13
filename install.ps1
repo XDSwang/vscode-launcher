@@ -24,7 +24,16 @@ function Find-VSCodePath {
 }
 $codePath = Find-VSCodePath
 if (-not $codePath) {
-    Write-Host "  [错误] 未检测到 VSCode，请先安装 VSCode" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "  [提示] 未在常见安装路径找到 VSCode" -ForegroundColor Yellow
+    Write-Host "  请手动输入 Code.exe 的完整路径（含文件名）" -ForegroundColor Yellow
+    Write-Host "  示例: E:\...\Code.exe" -ForegroundColor DarkGray
+    Write-Host "  查看方法: 右键 VSCode 快捷方式 → 打开文件所在位置 → 复制地址栏路径并补上 Code.exe" -ForegroundColor DarkGray
+    $manualCode = Read-Host "  Code.exe 完整路径（直接回车=取消安装）"
+    if ($manualCode -and (Test-Path $manualCode)) { $codePath = $manualCode }
+}
+if (-not $codePath) {
+    Write-Host "  [错误] 未提供有效的 VSCode 路径，无法继续安装" -ForegroundColor Red
     Read-Host "  按回车退出"
     exit 1
 }
@@ -36,8 +45,7 @@ function Find-CondaPath {
         "$env:USERPROFILE\anaconda3\Scripts\conda.exe",
         "$env:USERPROFILE\miniconda3\Scripts\conda.exe",
         "C:\ProgramData\anaconda3\Scripts\conda.exe",
-        "C:\ProgramData\miniconda3\Scripts\conda.exe",
-        "D:\dxx\software\Users\dxx\anaconda3\Scripts\conda.exe"
+        "C:\ProgramData\miniconda3\Scripts\conda.exe"
     )
     foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
     return $null
@@ -46,7 +54,9 @@ $condaPath = Find-CondaPath
 if ($condaPath) {
     Write-Host "  [OK] conda: $condaPath" -ForegroundColor Green
 } else {
-    Write-Host "  [提示] 未检测到 conda，Python 环境功能需手动添加包管理器" -ForegroundColor Yellow
+    Write-Host "  [提示] 未检测到 conda" -ForegroundColor Yellow
+    Write-Host "  可稍后在脚本中手动添加包管理器（运行 vscode-select-env.ps1 → 添加新包管理器）" -ForegroundColor Yellow
+    Write-Host "  路径示例: D:\...\conda.exe（查看方法: 命令行执行 where conda）" -ForegroundColor DarkGray
 }
 
 # 3. 复制脚本到文档目录

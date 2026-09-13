@@ -69,7 +69,7 @@ function Add-PackageManager {
     Write-Host ""; Write-Host "  添加包管理器" -ForegroundColor Cyan; Write-Host "  目前支持: conda" -ForegroundColor DarkGray; Write-Host ""
     $name = Read-Host "  名称（如 Anaconda、Miniconda）"
     if ([string]::IsNullOrWhiteSpace($name)) { return $null }
-    $guessPaths = @("D:\dxx\software\Users\dxx\anaconda3\Scripts\conda.exe","$env:USERPROFILE\anaconda3\Scripts\conda.exe","$env:USERPROFILE\miniconda3\Scripts\conda.exe","C:\ProgramData\anaconda3\Scripts\conda.exe","C:\ProgramData\miniconda3\Scripts\conda.exe")
+    $guessPaths = @("$env:USERPROFILE\anaconda3\Scripts\conda.exe","$env:USERPROFILE\miniconda3\Scripts\conda.exe","C:\ProgramData\anaconda3\Scripts\conda.exe","C:\ProgramData\miniconda3\Scripts\conda.exe")
     $defaultPath = ""
     foreach ($gp in $guessPaths) { if (Test-Path $gp) { $defaultPath = $gp; break } }
     $path = Read-Host "  conda.exe 路径（回车=$defaultPath）"
@@ -228,13 +228,19 @@ Write-Host "  ========================" -ForegroundColor DarkGray
 $managers = Get-PackageManagers
 if ($managers.Count -eq 0) {
     Write-Host ""; Write-Host "  首次使用，自动检测 conda..." -ForegroundColor DarkGray
-    foreach ($gp in @("D:\dxx\software\Users\dxx\anaconda3\Scripts\conda.exe","$env:USERPROFILE\anaconda3\Scripts\conda.exe","$env:USERPROFILE\miniconda3\Scripts\conda.exe","C:\ProgramData\anaconda3\Scripts\conda.exe")) {
+    foreach ($gp in @("$env:USERPROFILE\anaconda3\Scripts\conda.exe","$env:USERPROFILE\miniconda3\Scripts\conda.exe","C:\ProgramData\anaconda3\Scripts\conda.exe")) {
         if (Test-Path $gp) {
             Save-PackageManagers @([PSCustomObject]@{ Type = "conda"; Name = "Anaconda"; Path = $gp })
             Write-Host "  自动添加: Anaconda ($gp)" -ForegroundColor Green; break
         }
     }
     $managers = Get-PackageManagers
+}
+if ($managers.Count -eq 0) {
+    Write-Host ""
+    Write-Host "  未检测到 conda，可手动添加包管理器" -ForegroundColor Yellow
+    Write-Host "  下方选择"添加新包管理器"，输入 conda.exe 完整路径" -ForegroundColor Yellow
+    Write-Host "  路径示例: D:\...\conda.exe（查看方法: 命令行执行 where conda）" -ForegroundColor DarkGray
 }
 
 $selectedPM = $null; $selectedPython = $null

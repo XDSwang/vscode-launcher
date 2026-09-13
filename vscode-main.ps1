@@ -30,7 +30,7 @@ try { Set-Content -Path $script:ErrorLogFile -Value "" -Encoding UTF8 } catch { 
 
 Write-Host ""
 Write-Host "  VSCode 启动器" -ForegroundColor Cyan
-Write-Host "  脚本位置: C:\Users\dxx\Documents\VSCode启动器" -ForegroundColor DarkGray
+Write-Host "  脚本位置: $scriptDir" -ForegroundColor DarkGray
 Write-Host "  （单独运行: vscode-select-ext.ps1 选扩展, vscode-select-env.ps1 选环境, vscode-select-workspace.ps1 选工作区, vscode-run.ps1 直接启动）" -ForegroundColor DarkGray
 
 # 扩展中文映射（用于一键复用显示）
