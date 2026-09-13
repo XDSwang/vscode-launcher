@@ -28,7 +28,7 @@ if (-not $codePath) {
     Write-Host "  [提示] 未在常见安装路径找到 VSCode" -ForegroundColor Yellow
     Write-Host "  请手动输入 Code.exe 的完整路径（含文件名）" -ForegroundColor Yellow
     Write-Host "  示例: E:\...\Code.exe" -ForegroundColor DarkGray
-    Write-Host "  查看方法: 右键 VSCode 快捷方式 → 打开文件所在位置 → 复制地址栏路径并补上 Code.exe" -ForegroundColor DarkGray
+    Write-Host "  查看方法: 命令行执行 where code" -ForegroundColor DarkGray
     $manualCode = Read-Host "  Code.exe 完整路径（直接回车=取消安装）"
     if ($manualCode -and (Test-Path $manualCode)) { $codePath = $manualCode }
 }
