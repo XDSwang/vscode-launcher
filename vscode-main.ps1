@@ -49,7 +49,7 @@ function Get-ExtDisplayName($id) {
 }
 
 # ===== 一键复用上次记录 =====
-$configDir  = "$env:USERPROFILE\.vscode-launcher"
+$configDir  = $(if (Test-Path "D:\") { "D:\VSCodeLauncher" } else { "$env:USERPROFILE\.vscode-launcher" })
 $configFile = "$configDir\last.json"
 $lastEnv = $null
 if (Test-Path $configFile) { try { $lastEnv = Get-Content $configFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { } }

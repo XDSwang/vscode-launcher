@@ -25,10 +25,10 @@ trap {
 }
 
 # 配置
-$configDir  = "$env:USERPROFILE\.vscode-launcher"
+$configDir  = $(if (Test-Path "D:\") { "D:\VSCodeLauncher" } else { "$env:USERPROFILE\.vscode-launcher" })
 $configFile = "$configDir\last.json"
 function Save-VSCodePath($path) {
-    $configDir = "$env:USERPROFILE\.vscode-launcher"
+    $configDir = $(if (Test-Path "D:\") { "D:\VSCodeLauncher" } else { "$env:USERPROFILE\.vscode-launcher" })
     $configFile = "$configDir\config.json"
     if (-not (Test-Path $configDir)) { New-Item -ItemType Directory -Path $configDir -Force | Out-Null }
     $cfg = [PSCustomObject]@{}
@@ -37,7 +37,7 @@ function Save-VSCodePath($path) {
     $cfg | ConvertTo-Json -Depth 3 | Set-Content $configFile -Encoding UTF8
 }
 function Get-VSCodePath {
-    $configDir = "$env:USERPROFILE\.vscode-launcher"
+    $configDir = $(if (Test-Path "D:\") { "D:\VSCodeLauncher" } else { "$env:USERPROFILE\.vscode-launcher" })
     $configFile = "$configDir\config.json"
     $savedPath = $null
     if (Test-Path $configFile) {

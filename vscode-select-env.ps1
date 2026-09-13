@@ -20,7 +20,7 @@ trap {
 }
 
 # 配置
-$configDir  = "$env:USERPROFILE\.vscode-launcher"
+$configDir  = $(if (Test-Path "D:\") { "D:\VSCodeLauncher" } else { "$env:USERPROFILE\.vscode-launcher" })
 $configFile = "$configDir\last.json"
 $pmConfigFile = "$configDir\package-managers.json"
 
