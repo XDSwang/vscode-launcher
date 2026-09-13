@@ -20,7 +20,7 @@ trap {
 }
 
 # 配置
-$configDir  = $(if (Test-Path "D:\") { "D:\VSCodeLauncher" } else { "$env:USERPROFILE\.vscode-launcher" })
+$configDir  = $(if (Test-Path "D:\") { "D:\vscode-launcher\VSCodeLauncher" } else { "$env:USERPROFILE\vscode-launcher\VSCodeLauncher" })
 $configFile = "$configDir\last.json"
 
 # 常用项目根目录（扫描其子文件夹作为候选）

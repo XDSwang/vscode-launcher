@@ -10,7 +10,7 @@ Write-Host "  ================================" -ForegroundColor Cyan
 Write-Host ""
 
 $scriptDir = $PSScriptRoot
-$installDir = $(if (Test-Path "D:\") { "D:\VSCode启动器" } else { "$env:USERPROFILE\Documents\VSCode启动器" })
+$installDir = $(if (Test-Path "D:\") { "D:\vscode-launcher\VSCode启动器" } else { "$env:USERPROFILE\vscode-launcher\VSCode启动器" })
 
 # 1. 检测 VSCode
 function Find-VSCodePath {
@@ -73,7 +73,7 @@ foreach ($s in $scripts) {
 }
 
 # 4. 创建配置目录
-$configDir = $(if (Test-Path "D:\") { "D:\VSCodeLauncher" } else { "$env:USERPROFILE\.vscode-launcher" })
+$configDir = $(if (Test-Path "D:\") { "D:\vscode-launcher\VSCodeLauncher" } else { "$env:USERPROFILE\vscode-launcher\VSCodeLauncher" })
 if (-not (Test-Path $configDir)) { New-Item -ItemType Directory -Path $configDir -Force | Out-Null }
 
 # 5. 写入 conda 配置（如果检测到）

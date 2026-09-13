@@ -1,4 +1,4 @@
-# VSCode 启动器
+﻿# VSCode 启动器
 
 让 VSCode 像 PyCharm 一样：默认纯净启动、按需选择扩展、自动管理 conda/Python 环境、选择工作区、记忆上次选择。
 
@@ -16,14 +16,17 @@
 - **进程分离**：启动 VSCode 后脚本窗口停窗显示验证结果，按回车关闭，VSCode 独立运行不受影响
 
 ## 快速安装
-测试修改
 1. 下载本仓库所有文件
 2. 右键 `install.ps1` → 使用 PowerShell 运行
 3. 安装完成后双击桌面 `Visual Studio Code` 快捷方式
 
+> **首次使用说明**：install.ps1 只负责安装（检测 VSCode/conda、复制脚本、创建快捷方式、配置 VSCode 设置）。
+> **还需要运行一次启动器**：双击桌面快捷方式，依次选择扩展、Python 环境、工作区，选择结果会保存。
+> 之后每次打开直接沿用上次选择（开头询问是否继续上次记录，输入 y 即可一键启动）。
+
 安装脚本会自动：
 - 检测 VSCode 和 conda 路径
-- 复制脚本到 `文档\VSCode启动器\`
+- 复制脚本到 `D:\vscode-launcher\VSCode启动器\`（无 D 盘时在 `%USERPROFILE%\vscode-launcher\VSCode启动器\`）
 - 创建桌面快捷方式
 - 配置 VSCode 全局设置（PyCharm 风格布局、终端、conda）
 - 配置 PowerShell conda 初始化
@@ -42,7 +45,7 @@
 
 ## 单独运行
 
-脚本都在 `文档\VSCode启动器\`，可单独运行：
+脚本都在 `D:\vscode-launcher\VSCode启动器\`（无 D 盘时在 `%USERPROFILE%\vscode-launcher\VSCode启动器\`），可单独运行：
 
 | 脚本 | 功能 |
 |------|------|
@@ -54,11 +57,11 @@
 
 ## 配置文件
 
-- `%USERPROFILE%\.vscode-launcher\last.json`：上次选择记录（扩展/环境/工作区）
-- `%USERPROFILE%\.vscode-launcher\config.json`：全局配置（VSCode 路径）
-- `%USERPROFILE%\.vscode-launcher\package-managers.json`：包管理器配置
-- `文档\VSCode启动器\last-run.log`：最近一次启动验证结果（覆盖式）
-- `文档\VSCode启动器\error.log`：最近一次运行异常（覆盖式）
+- `D:\vscode-launcher\VSCodeLauncher\last.json`（无 D 盘：`%USERPROFILE%\vscode-launcher\VSCodeLauncher\last.json`）：上次选择记录（扩展/环境/工作区）
+- `D:\vscode-launcher\VSCodeLauncher\config.json`（无 D 盘：`%USERPROFILE%\vscode-launcher\VSCodeLauncher\config.json`）：全局配置（VSCode 路径）
+- `D:\vscode-launcher\VSCodeLauncher\package-managers.json`（无 D 盘：`%USERPROFILE%\vscode-launcher\VSCodeLauncher\package-managers.json`）：包管理器配置
+- `D:\vscode-launcher\VSCode启动器\last-run.log`：最近一次启动验证结果（覆盖式）
+- `D:\vscode-launcher\VSCode启动器\error.log`：最近一次运行异常（覆盖式）
 
 ### 字段覆盖规则
 
