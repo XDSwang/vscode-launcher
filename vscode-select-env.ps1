@@ -80,6 +80,36 @@ function Add-PackageManager {
     Write-Host ""; Write-Host "  已添加: $name ($path)" -ForegroundColor Green
     return $pm
 }
+function Remove-PackageManager {
+    $managers = Get-PackageManagers
+    if ($managers.Count -eq 0) { Write-Host "  没有可删除的包管理器" -ForegroundColor Yellow; return }
+    Write-Host ""; Write-Host "  删除包管理器（仅删除记录，不影响 conda 环境和项目文件）" -ForegroundColor Yellow; Write-Host ""
+    for ($i = 0; $i -lt $managers.Count; $i++) { $m = $managers[$i]; Write-Host ("  {0,2}. {1,-16} {2,-8} {3}" -f ($i + 1), $m.Name, $m.Type, $m.Path) }
+    Write-Host ""
+    $rmInput = Read-Host "  选择要删除的包管理器编号（回车=取消）"
+    if ([string]::IsNullOrWhiteSpace($rmInput)) { Write-Host "  已取消" -ForegroundColor DarkGray; return }
+    $rmIdx = -1
+    if (-not [int]::TryParse($rmInput, [ref]$rmIdx)) { Write-Host "  输入无效，请输入数字编号" -ForegroundColor Red; return }
+    $rmIdx = $rmIdx - 1
+    if ($rmIdx -lt 0 -or $rmIdx -ge $managers.Count) { Write-Host "  编号无效" -ForegroundColor Red; return }
+    $target = $managers[$rmIdx]
+    Write-Host ""
+    Write-Host "  ===== 删除确认 =====" -ForegroundColor Yellow
+    Write-Host ("  编号: {0}" -f ($rmIdx + 1))
+    Write-Host ("  包管理器: {0} ({1})" -f $target.Name, $target.Type)
+    Write-Host ("  路径: {0}" -f $target.Path)
+    Write-Host "  ====================" -ForegroundColor Yellow
+    Write-Host ""
+    while ($true) {
+        $cf = Read-Host "  确认删除? (y=确认, n=取消)"
+        if ($cf -match '^[Yy]$') { break }
+        if ($cf -match '^[Nn]$') { Write-Host "  已取消" -ForegroundColor DarkGray; return }
+        Write-Host "  输入无效，请输入 y 或 n" -ForegroundColor Red
+    }
+    $remaining = @($managers | Where-Object { $_ -ne $target })
+    Save-PackageManagers $remaining
+    Write-Host ("  已删除: {0}" -f $target.Name) -ForegroundColor Green
+}
 
 # 扫描环境
 function Get-PythonEnvs($pm) {
@@ -264,8 +294,9 @@ while (-not $selectedPM) {
     $managers = Get-PackageManagers
     Write-Host ""; Write-Host "  可用包管理器:" -ForegroundColor Cyan; Write-Host ""
     for ($i = 0; $i -lt $managers.Count; $i++) { $m = $managers[$i]; Write-Host ("  {0,2}. {1,-16} {2,-8} {3}" -f ($i + 1), $m.Name, $m.Type, $m.Path) }
-    $addIdx = $managers.Count + 1; $skipIdx = $managers.Count + 2
+    $addIdx = $managers.Count + 1; $delIdx = $managers.Count + 2; $skipIdx = $managers.Count + 3
     Write-Host ("  {0,2}. 添加新包管理器" -f $addIdx) -ForegroundColor Green
+    Write-Host ("  {0,2}. 删除包管理器" -f $delIdx) -ForegroundColor Red
     Write-Host ("  {0,2}. 跳过（不设置Python环境）" -f $skipIdx) -ForegroundColor Yellow
     Write-Host ""
     $pmInput = Read-Host "  选择编号"
@@ -275,6 +306,7 @@ while (-not $selectedPM) {
         $idx = $idx - 1
         if ($idx -ge 0 -and $idx -lt $managers.Count) { $selectedPM = $managers[$idx] }
         elseif ($idx -eq $managers.Count) { $selectedPM = Add-PackageManager }
+        elseif ($idx -eq ($managers.Count + 1)) { Remove-PackageManager }
         elseif ($idx -eq $skipIdx - 1) { break }
     }
 }

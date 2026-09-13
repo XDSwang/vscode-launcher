@@ -10,6 +10,7 @@ Write-Host "  ================================" -ForegroundColor Cyan
 Write-Host ""
 
 $scriptDir = $PSScriptRoot
+$configDir = $(if (Test-Path "D:\") { "D:\vscode-launcher\VSCodeLauncher" } else { "$env:USERPROFILE\vscode-launcher\VSCodeLauncher" })
 $installDir = $(if (Test-Path "D:\") { "D:\vscode-launcher\VSCode启动器" } else { "$env:USERPROFILE\vscode-launcher\VSCode启动器" })
 
 # 1. 检测 VSCode
@@ -22,7 +23,32 @@ function Find-VSCodePath {
     foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
     return $null
 }
+function Get-SavedVSCodePath {
+    $cf = "$configDir\config.json"
+    if (Test-Path $cf) {
+        try { $s = Get-Content $cf -Raw -Encoding UTF8 | ConvertFrom-Json; if ($s.VSCodePath) { return $s.VSCodePath } } catch { }
+    }
+    return $null
+}
+$savedCode = Get-SavedVSCodePath
 $codePath = Find-VSCodePath
+if ($savedCode) {
+    if (Test-Path $savedCode) {
+        Write-Host ""
+        Write-Host "  [提示] 已配置 VSCode: $savedCode" -ForegroundColor Yellow
+        while ($true) {
+            $yn = Read-Host "  使用已配置路径? (y=使用, n=重新输入)"
+            if ($yn -match '^[Yy]$') { $codePath = $savedCode; break }
+            if ($yn -match '^[Nn]$') { $codePath = $null; break }
+            Write-Host "  输入无效，请输入 y 或 n" -ForegroundColor Red
+        }
+    } else {
+        Write-Host ""
+        Write-Host "  [提示] 已配置 VSCode: $savedCode（路径不存在，请重新输入）" -ForegroundColor Yellow
+        $codePath = $null
+    }
+}
+
 if (-not $codePath) {
     Write-Host ""
     Write-Host "  [提示] 未在常见安装路径找到 VSCode" -ForegroundColor Yellow
@@ -39,26 +65,6 @@ if (-not $codePath) {
 }
 Write-Host "  [OK] VSCode: $codePath" -ForegroundColor Green
 
-# 2. 检测 conda（可选）
-function Find-CondaPath {
-    $candidates = @(
-        "$env:USERPROFILE\anaconda3\Scripts\conda.exe",
-        "$env:USERPROFILE\miniconda3\Scripts\conda.exe",
-        "C:\ProgramData\anaconda3\Scripts\conda.exe",
-        "C:\ProgramData\miniconda3\Scripts\conda.exe"
-    )
-    foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
-    return $null
-}
-$condaPath = Find-CondaPath
-if ($condaPath) {
-    Write-Host "  [OK] conda: $condaPath" -ForegroundColor Green
-} else {
-    Write-Host "  [提示] 未检测到 conda" -ForegroundColor Yellow
-    Write-Host "  可稍后在脚本中手动添加包管理器（运行 vscode-select-env.ps1 → 添加新包管理器）" -ForegroundColor Yellow
-    Write-Host "  路径示例: D:\...\conda.exe（查看方法: 命令行执行 where conda）" -ForegroundColor DarkGray
-}
-
 # 3. 复制脚本到文档目录
 Write-Host ""
 Write-Host "  正在安装到: $installDir" -ForegroundColor Cyan
@@ -73,20 +79,9 @@ foreach ($s in $scripts) {
 }
 
 # 4. 创建配置目录
-$configDir = $(if (Test-Path "D:\") { "D:\vscode-launcher\VSCodeLauncher" } else { "$env:USERPROFILE\vscode-launcher\VSCodeLauncher" })
 if (-not (Test-Path $configDir)) { New-Item -ItemType Directory -Path $configDir -Force | Out-Null }
 
-# 5. 写入 conda 配置（如果检测到）
-if ($condaPath) {
-    $pmFile = "$configDir\package-managers.json"
-    $pmList = @([PSCustomObject]@{ Type = "conda"; Name = "Anaconda"; Path = $condaPath })
-    $json = ConvertTo-Json -InputObject @($pmList) -Depth 3
-    if ($json -notmatch '^\s*\[') { $json = "[$json]" }
-    $json | Set-Content $pmFile -Encoding UTF8
-    Write-Host "  [OK] 已配置 conda 包管理器" -ForegroundColor Green
-}
-
-# 6. 创建桌面快捷方式
+# 5. 创建桌面快捷方式
 $desktop = [Environment]::GetFolderPath("Desktop")
 $shortcutPath = Join-Path $desktop "Visual Studio Code.lnk"
 $ws = New-Object -ComObject WScript.Shell
@@ -99,7 +94,7 @@ $shortcut.Description = "VSCode 启动器（选扩展/环境/工作区）"
 $shortcut.Save()
 Write-Host "  [OK] 桌面快捷方式已创建" -ForegroundColor Green
 
-# 7. 配置 VSCode 全局设置（PyCharm 风格）
+# 6. 配置 VSCode 全局设置（PyCharm 风格）
 $settingsDir = "$env:APPDATA\Code\User"
 if (-not (Test-Path $settingsDir)) { New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null }
 $settingsFile = "$settingsDir\settings.json"
@@ -111,26 +106,8 @@ $settings | Add-Member -NotePropertyName "window.newWindowDimensions" -NotePrope
 $settings | Add-Member -NotePropertyName "terminal.integrated.defaultProfile.windows" -NotePropertyValue "PowerShell" -Force
 $settings | Add-Member -NotePropertyName "python.terminal.activateEnvironment" -NotePropertyValue $true -Force
 $settings | Add-Member -NotePropertyName "python.terminal.activateEnvInCurrentTerminal" -NotePropertyValue $true -Force
-if ($condaPath) {
-    $condaDir = Split-Path (Split-Path $condaPath -Parent) -Parent
-    $settings | Add-Member -NotePropertyName "python.condaPath" -NotePropertyValue $condaPath -Force
-}
 $settings | ConvertTo-Json -Depth 5 | Set-Content $settingsFile -Encoding UTF8
 Write-Host "  [OK] VSCode 全局设置已配置" -ForegroundColor Green
-
-# 8. 配置 PowerShell profile（conda 初始化）
-$psProfileDir = "$env:USERPROFILE\Documents\WindowsPowerShell"
-if (-not (Test-Path $psProfileDir)) { New-Item -ItemType Directory -Path $psProfileDir -Force | Out-Null }
-$psProfile = "$psProfileDir\Microsoft.PowerShell_profile.ps1"
-if ($condaPath) {
-    $condaDir = Split-Path (Split-Path $condaPath -Parent) -Parent
-    $hookLine = "& `"$condaDir\shell\condabin\conda-hook.ps1`""
-    $profileContent = if (Test-Path $psProfile) { Get-Content $psProfile -Raw -Encoding UTF8 } else { "" }
-    if ($profileContent -notmatch 'conda-hook') {
-        Add-Content -Path $psProfile -Value "`n# conda初始化`n$hookLine" -Encoding UTF8
-        Write-Host "  [OK] PowerShell conda 初始化已配置" -ForegroundColor Green
-    }
-}
 
 Write-Host ""
 Write-Host "  ================================" -ForegroundColor Green
